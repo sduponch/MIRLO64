@@ -251,6 +251,9 @@ module core_top (
   // pin 31 (port 2), bank 0's bits 4 (port 3) and 7 (port 4) -- are each pulled low (driven 0) or let go (an input; the 1 kOhm pull-ups on the
   // harness raise them). Nothing is ever driven high but the other bits of bank 0 during a low pulse of one of its lines (bank 0 has one
   // direction for all its bits): docs/analogizer.md, "The SNAC port as the console's PIF".
+  // Or the runtime turns the JVS host on (`jv_en`, rtl/analogizer/an_jvs.sv; the SNAC adapter's JVS wiring, its configuration A): the RS485
+  // transceiver's DI on bank 1's bit 6 (SNAC OUT1) and its DE on bit 7 (OUT2), bank 1 an output then even with the video off; its RO on bank
+  // 0's bit 7 (IN4) and the SENSE line on bit 5 (IN7), bank 0 an input; the pins 30 and 31 as they idle.
   wire        an_own;
   wire [2:0]  an_mode;
   wire [7:0]  an_bank3, an_bank2;
@@ -265,16 +268,18 @@ module core_top (
   wire        sn_en;                                  // the Joybus has the SNAC pins (it needs `an_own`)
   wire        sn_p30_dir, sn_p30_oe, sn_p31_dir, sn_p31_oe, sn_b0_dir, sn_b0_oe;
   wire  [3:0] sn_b0_o;
+  wire        jv_en, jv_tx, jv_dir;                   // the JVS has bank 0 (an input) and bank 1's bits 7:6 (it needs `an_own`)
   assign cart_tran_bank3         = an_own ? (an_en ? an_bank3 : 8'hzz) : gb_a_oe ? gb_a[7:0] : 8'hzz;
   assign cart_tran_bank3_dir     = an_own ? an_en : gb_a_dir;
   assign cart_tran_bank2         = an_own ? (an_en ? an_bank2 : 8'hzz) : gb_a_oe ? gb_a[15:8] : 8'hzz;
   assign cart_tran_bank2_dir     = an_own ? an_en : gb_a_dir;
-  assign cart_tran_bank1         = an_own ? (an_en ? {2'b00, clk_vid_90deg, an_bank1_b} : 8'hzz) : gb_d_oe ? gb_d_o : 8'hzz;
-  assign cart_tran_bank1_dir     = an_own ? an_en : gb_d_dir;
+  assign cart_tran_bank1         = an_own ? (an_en || jv_en ? {jv_en ? {jv_dir, jv_tx} : 2'b00, an_en ? {clk_vid_90deg, an_bank1_b} : 6'd0} : 8'hzz)
+                                          : gb_d_oe ? gb_d_o : 8'hzz;
+  assign cart_tran_bank1_dir     = an_own ? an_en || jv_en : gb_d_dir;
   // bank 0: the cartridge's PHI, /WR, /RD and /CS (idle high), or the Joybus's: released (an input) but for a low pulse of port 3 or 4, when
   // the bank is an output with the pulsed bit 0 and the others 1 (sn_b0_o)
-  assign cart_tran_bank0         = sn_en ? (sn_b0_oe ? sn_b0_o : 4'bzzzz) : {gb_phi, gb_wr_n, gb_rd_n, gb_cs_n};
-  assign cart_tran_bank0_dir     = sn_en ? sn_b0_dir : 1'b1;
+  assign cart_tran_bank0         = sn_en ? (sn_b0_oe ? sn_b0_o : 4'bzzzz) : jv_en ? 4'bzzzz : {gb_phi, gb_wr_n, gb_rd_n, gb_cs_n};
+  assign cart_tran_bank0_dir     = sn_en ? sn_b0_dir : !jv_en;
   // pin 30: /RES of a cartridge, or port 1 (its data pin is 0 and only its direction and driver come and go: open drain)
   assign cart_tran_pin30         = sn_en ? (sn_p30_oe ? 1'b0 : 1'bz) : 1'b0;
   assign cart_tran_pin30_dir     = sn_en ? sn_p30_dir : gb_on ? 1'b0 : 1'bz;   // (off: as the template leaves it)
@@ -1099,6 +1104,8 @@ module core_top (
       .sn_en(sn_en), .sn_p30_dir(sn_p30_dir), .sn_p30_oe(sn_p30_oe), .sn_p31_dir(sn_p31_dir), .sn_p31_oe(sn_p31_oe),
       .sn_b0_dir(sn_b0_dir), .sn_b0_oe(sn_b0_oe), .sn_b0_o(sn_b0_o),
       .sn_dq({cart_tran_bank0[7], cart_tran_bank0[4], cart_tran_pin31, cart_tran_pin30}),
+      // the JVS host: the transceiver's DI and DE out on bank 1, its RO and SENSE in on bank 0
+      .jv_en(jv_en), .jv_tx(jv_tx), .jv_dir(jv_dir), .jv_rx(cart_tran_bank0[7]), .jv_sense(cart_tran_bank0[5]),
 
       .sdram_a(dram_a),
       .sdram_ba(dram_ba),

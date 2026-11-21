@@ -417,6 +417,47 @@
 #define CSR_SNAC_DATA_ADDR (CSR_BASE + 0xe14)
 #define CSR_SNAC_DATA_SIZE 1
 
+/* JVS */
+#define CSR_JVS_BASE (CSR_BASE + 0xf00)
+#define CSR_JVS_ID_OFS 0xf00
+#define CSR_JVS_ID_ADDR (CSR_BASE + 0xf00)
+#define CSR_JVS_ID_SIZE 1
+#define CSR_JVS_CTRL_OFS 0xf04
+#define CSR_JVS_CTRL_ADDR (CSR_BASE + 0xf04)
+#define CSR_JVS_CTRL_SIZE 1
+#define CSR_JVS_CTRL_ON_OFFSET 0
+#define CSR_JVS_CTRL_ON_SIZE 1
+#define CSR_JVS_CTRL_POLL_OFFSET 1
+#define CSR_JVS_CTRL_POLL_SIZE 1
+#define CSR_JVS_CTRL_PERIOD_OFFSET 8
+#define CSR_JVS_CTRL_PERIOD_SIZE 8
+#define CSR_JVS_STAT_OFS 0xf08
+#define CSR_JVS_STAT_ADDR (CSR_BASE + 0xf08)
+#define CSR_JVS_STAT_SIZE 1
+#define CSR_JVS_STAT_SENSE_OFFSET 0
+#define CSR_JVS_STAT_SENSE_SIZE 1
+#define CSR_JVS_STAT_GOOD_OFFSET 8
+#define CSR_JVS_STAT_GOOD_SIZE 8
+#define CSR_JVS_STAT_ERRORS_OFFSET 16
+#define CSR_JVS_STAT_ERRORS_SIZE 8
+#define CSR_JVS_XFER_OFS 0xf0c
+#define CSR_JVS_XFER_ADDR (CSR_BASE + 0xf0c)
+#define CSR_JVS_XFER_SIZE 1
+#define CSR_JVS_XFER_N_OFFSET 0
+#define CSR_JVS_XFER_N_SIZE 8
+#define CSR_JVS_XFER_BAD_OFFSET 29
+#define CSR_JVS_XFER_BAD_SIZE 1
+#define CSR_JVS_XFER_TIMEOUT_OFFSET 30
+#define CSR_JVS_XFER_TIMEOUT_SIZE 1
+#define CSR_JVS_XFER_BUSY_OFFSET 31
+#define CSR_JVS_XFER_BUSY_SIZE 1
+#define CSR_JVS_PTR_OFS 0xf10
+#define CSR_JVS_PTR_ADDR (CSR_BASE + 0xf10)
+#define CSR_JVS_PTR_SIZE 1
+#define CSR_JVS_DATA_OFS 0xf14
+#define CSR_JVS_DATA_ADDR (CSR_BASE + 0xf14)
+#define CSR_JVS_DATA_SIZE 1
+
 #ifndef __ASSEMBLER__
 #include <stdint.h>
 #ifndef CSR_ACCESSORS_DEFINED
@@ -736,6 +777,52 @@ static inline uint32_t snac_ptr_read(void) { return csr_read_simple(CSR_SNAC_PTR
 static inline void snac_ptr_write(uint32_t v) { csr_write_simple(v, CSR_SNAC_PTR_ADDR); }
 static inline uint32_t snac_data_read(void) { return csr_read_simple(CSR_SNAC_DATA_ADDR); }
 static inline void snac_data_write(uint32_t v) { csr_write_simple(v, CSR_SNAC_DATA_ADDR); }
+
+/* JVS */
+static inline uint32_t jvs_id_read(void) { return csr_read_simple(CSR_JVS_ID_ADDR); }
+static inline uint32_t jvs_ctrl_read(void) { return csr_read_simple(CSR_JVS_CTRL_ADDR); }
+static inline void jvs_ctrl_write(uint32_t v) { csr_write_simple(v, CSR_JVS_CTRL_ADDR); }
+static inline uint32_t jvs_ctrl_on_extract(uint32_t r) { return (r >> 0) & 0x1u; }
+static inline uint32_t jvs_ctrl_on_read(void) { return jvs_ctrl_on_extract(jvs_ctrl_read()); }
+static inline uint32_t jvs_ctrl_on_replace(uint32_t r, uint32_t v) { return (r & ~(0x1u << 0)) | ((v & 0x1u) << 0); }
+static inline void jvs_ctrl_on_write(uint32_t v) { jvs_ctrl_write(jvs_ctrl_on_replace(jvs_ctrl_read(), v)); }
+static inline uint32_t jvs_ctrl_poll_extract(uint32_t r) { return (r >> 1) & 0x1u; }
+static inline uint32_t jvs_ctrl_poll_read(void) { return jvs_ctrl_poll_extract(jvs_ctrl_read()); }
+static inline uint32_t jvs_ctrl_poll_replace(uint32_t r, uint32_t v) { return (r & ~(0x1u << 1)) | ((v & 0x1u) << 1); }
+static inline void jvs_ctrl_poll_write(uint32_t v) { jvs_ctrl_write(jvs_ctrl_poll_replace(jvs_ctrl_read(), v)); }
+static inline uint32_t jvs_ctrl_period_extract(uint32_t r) { return (r >> 8) & 0xffu; }
+static inline uint32_t jvs_ctrl_period_read(void) { return jvs_ctrl_period_extract(jvs_ctrl_read()); }
+static inline uint32_t jvs_ctrl_period_replace(uint32_t r, uint32_t v) { return (r & ~(0xffu << 8)) | ((v & 0xffu) << 8); }
+static inline void jvs_ctrl_period_write(uint32_t v) { jvs_ctrl_write(jvs_ctrl_period_replace(jvs_ctrl_read(), v)); }
+static inline uint32_t jvs_stat_read(void) { return csr_read_simple(CSR_JVS_STAT_ADDR); }
+static inline uint32_t jvs_stat_sense_extract(uint32_t r) { return (r >> 0) & 0x1u; }
+static inline uint32_t jvs_stat_sense_read(void) { return jvs_stat_sense_extract(jvs_stat_read()); }
+static inline uint32_t jvs_stat_good_extract(uint32_t r) { return (r >> 8) & 0xffu; }
+static inline uint32_t jvs_stat_good_read(void) { return jvs_stat_good_extract(jvs_stat_read()); }
+static inline uint32_t jvs_stat_errors_extract(uint32_t r) { return (r >> 16) & 0xffu; }
+static inline uint32_t jvs_stat_errors_read(void) { return jvs_stat_errors_extract(jvs_stat_read()); }
+static inline uint32_t jvs_xfer_read(void) { return csr_read_simple(CSR_JVS_XFER_ADDR); }
+static inline void jvs_xfer_write(uint32_t v) { csr_write_simple(v, CSR_JVS_XFER_ADDR); }
+static inline uint32_t jvs_xfer_n_extract(uint32_t r) { return (r >> 0) & 0xffu; }
+static inline uint32_t jvs_xfer_n_read(void) { return jvs_xfer_n_extract(jvs_xfer_read()); }
+static inline uint32_t jvs_xfer_n_replace(uint32_t r, uint32_t v) { return (r & ~(0xffu << 0)) | ((v & 0xffu) << 0); }
+static inline void jvs_xfer_n_write(uint32_t v) { jvs_xfer_write(jvs_xfer_n_replace(jvs_xfer_read(), v)); }
+static inline uint32_t jvs_xfer_bad_extract(uint32_t r) { return (r >> 29) & 0x1u; }
+static inline uint32_t jvs_xfer_bad_read(void) { return jvs_xfer_bad_extract(jvs_xfer_read()); }
+static inline uint32_t jvs_xfer_bad_replace(uint32_t r, uint32_t v) { return (r & ~(0x1u << 29)) | ((v & 0x1u) << 29); }
+static inline void jvs_xfer_bad_write(uint32_t v) { jvs_xfer_write(jvs_xfer_bad_replace(jvs_xfer_read(), v)); }
+static inline uint32_t jvs_xfer_timeout_extract(uint32_t r) { return (r >> 30) & 0x1u; }
+static inline uint32_t jvs_xfer_timeout_read(void) { return jvs_xfer_timeout_extract(jvs_xfer_read()); }
+static inline uint32_t jvs_xfer_timeout_replace(uint32_t r, uint32_t v) { return (r & ~(0x1u << 30)) | ((v & 0x1u) << 30); }
+static inline void jvs_xfer_timeout_write(uint32_t v) { jvs_xfer_write(jvs_xfer_timeout_replace(jvs_xfer_read(), v)); }
+static inline uint32_t jvs_xfer_busy_extract(uint32_t r) { return (r >> 31) & 0x1u; }
+static inline uint32_t jvs_xfer_busy_read(void) { return jvs_xfer_busy_extract(jvs_xfer_read()); }
+static inline uint32_t jvs_xfer_busy_replace(uint32_t r, uint32_t v) { return (r & ~(0x1u << 31)) | ((v & 0x1u) << 31); }
+static inline void jvs_xfer_busy_write(uint32_t v) { jvs_xfer_write(jvs_xfer_busy_replace(jvs_xfer_read(), v)); }
+static inline uint32_t jvs_ptr_read(void) { return csr_read_simple(CSR_JVS_PTR_ADDR); }
+static inline void jvs_ptr_write(uint32_t v) { csr_write_simple(v, CSR_JVS_PTR_ADDR); }
+static inline uint32_t jvs_data_read(void) { return csr_read_simple(CSR_JVS_DATA_ADDR); }
+static inline void jvs_data_write(uint32_t v) { csr_write_simple(v, CSR_JVS_DATA_ADDR); }
 #endif /* __ASSEMBLER__ */
 
 #endif

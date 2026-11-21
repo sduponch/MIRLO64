@@ -184,6 +184,21 @@ BLOCKS = [
         ("PTR",   0x10, RW, 1, []),                # the buffer's pointer (0..127)
         ("DATA",  0x14, RW, 1, []),                # the byte at PTR; each access moves PTR on. 64 + 4 n: port n's scan (3 bytes, then at +3 their count)
     ]),
+    # a JVS host on the SNAC port (rtl/analogizer/an_jvs.sv): one RS485 node at 115200, framing, escapes and sums in hardware,
+    # a frame resent every PERIOD ms by itself; 0..127 of the buffer the frame to send (node, data), 128..255 the last good answer
+    ("JVS", 0x0F00, [
+        ("ID",    0x00, R,  1, []),                # 0x4A560001
+        # [0] the pins are the JVS's (the adapter must own the port), [1] resend the last XFER's frame every PERIOD ms,
+        # [15:8] PERIOD: ms between frames' starts, and how long an answer is waited for (reset 20)
+        ("CTRL",  0x04, RW, 1, [("ON", 0, 1), ("POLL", 1, 1), ("PERIOD", 8, 8)]),
+        # [0] the SENSE line, [15:8] answers with a good sum, [23:16] transactions without one (both wrap)
+        ("STAT",  0x08, R,  1, [("SENSE", 0, 1), ("GOOD", 8, 8), ("ERRORS", 16, 8)]),
+        # write: send [6:0] bytes of the buffer (node, data) once now, and from then on if POLL; read: [31] busy, [30] no answer,
+        # [29] a broken one, [7:0] the bytes of the last good answer
+        ("XFER",  0x0C, RW, 1, [("N", 0, 8), ("BAD", 29, 1), ("TIMEOUT", 30, 1), ("BUSY", 31, 1)]),
+        ("PTR",   0x10, RW, 1, []),                # the buffer's pointer (0..255)
+        ("DATA",  0x14, RW, 1, []),                # the byte at PTR; each access moves PTR on (writes to 128..255 do nothing)
+    ]),
 ]
 # (GB_CART: only with the Verilog macro MIRLO_GB_CART -- without it all three read 0)
 RDP_CMD_FIFO_DEPTH = 2048      # CMD_STATUS.LEVEL is its width + 1 bits: 12

@@ -110,6 +110,10 @@ module mirlo_mips #(
     output wire          sn_p30_dir, sn_p30_oe, sn_p31_dir, sn_p31_oe, sn_b0_dir, sn_b0_oe,
     output wire   [3:0]  sn_b0_o,
     input  wire   [3:0]  sn_dq,
+    // a JVS host on the SNAC port instead (rtl/analogizer/an_jvs.sv): the RS485 transceiver's DI and DE, its RO and the SENSE line
+    output wire          jv_en,                         // the JVS has the pins
+    output wire          jv_tx, jv_dir,
+    input  wire          jv_rx, jv_sense,
     input  wire          use_jtag,
     output logic   [7:0] vga_b,
     output logic         vga_de,
@@ -439,6 +443,8 @@ logic        gbc_on, gbc_trust, gbc_start, gbc_we, gbc_busy;
 wire         sn_wr, sn_rd;
 wire  [3:0]  sn_a;
 wire  [31:0] sn_wd, sn_q;
+wire         jv_wr, jv_rd;
+wire  [31:0] jv_q;
 logic [15:0] gbc_addr;
 logic [7:0]  gbc_wdata, gbc_rdata;
 mirlo_regs regs (.clk, .rst,
@@ -471,13 +477,17 @@ mirlo_regs regs (.clk, .rst,
     .mon_vi, .vi_thr, .vi_irq, .vi_chg, .vi_clr,
     .mon_ai, .ai_irq, .ai_clr, .ai_chg, .ai_dac, .ai_step_we, .ai_step_wd,
     .si_irq, .si_clr, .si_ev, .si_done,
-    .sn_wr, .sn_rd, .sn_a, .sn_wd, .sn_q,
+    .sn_wr, .sn_rd, .sn_a, .sn_wd, .sn_q, .jv_wr, .jv_rd, .jv_q,
     .gbc_on, .gbc_trust, .gbc_start, .gbc_we, .gbc_addr, .gbc_wdata, .gbc_busy, .gbc_rdata);
 
 // ---------------------------------------------------------------- the SNAC port as the console's PIF
 an_snac_pif #(.CLK_HZ(62_500_000)) snac (.clk, .rst, .sel_wr(sn_wr), .sel_rd(sn_rd), .a(sn_a), .wd(sn_wd), .rd(sn_q), .own(an_own),
     .en(sn_en), .p30_dir(sn_p30_dir), .p30_oe(sn_p30_oe), .p31_dir(sn_p31_dir), .p31_oe(sn_p31_oe), .b0_dir(sn_b0_dir), .b0_oe(sn_b0_oe),
     .b0_o(sn_b0_o), .dq_in(sn_dq));
+
+// ---------------------------------------------------------------- a JVS host on the SNAC port
+an_jvs #(.CLK_HZ(62_500_000)) jvs (.clk, .rst, .sel_wr(jv_wr), .sel_rd(jv_rd), .a(sn_a), .wd(sn_wd), .rd(jv_q), .own(an_own),
+    .en(jv_en), .tx(jv_tx), .dir(jv_dir), .rx(jv_rx), .sense(jv_sense));
 
 // ---------------------------------------------------------------- the Game Boy cartridge slot
 gb_cart gbcart (.clk, .rst, .on(gbc_on), .trust(gbc_trust), .start(gbc_start), .we(gbc_we), .addr(gbc_addr),
