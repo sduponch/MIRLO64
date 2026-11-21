@@ -310,6 +310,11 @@ void n64rt_snac_sync(void);                /* follow the setting, read who is th
 int  n64rt_snac_present(int ch);
 int  n64rt_snac_xfer(int ch, const u8 *tx, u32 txlen, u8 *rx, u32 rxlen, u32 *got);
 u32  n64rt_snac_wait_take(void);           /* the SoC clocks spent on the wire since the last call */
+/* a JVS I/O board on the SNAC port (n64rt_jvs.c): its players as the controllers 1 (and 2) */
+void n64rt_jvs_step(void);                 /* follow the setting, take the init a step on, read the last answer */
+int  n64rt_jvs_player(int ch);             /* controller ch is the JVS board's */
+u32  n64rt_jvs_keys(int ch);               /* its switches as the Pocket's keys (n64rt_pad.h) */
+u32  n64rt_jvs_joy(int ch);                /* its analog channels as a pad's stick bytes */
 u8   n64rt_pak_crc(const u8 *block);
 void n64rt_pak_state_begin(void);         /* around the copy of the runtime's memory in a save state: a Transfer Pak is unplugged in it */
 void n64rt_pak_state_end(void);

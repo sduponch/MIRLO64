@@ -21,7 +21,8 @@
 
 #define SNAC_ID       0x534E0001u
 #define AN_OWN        0x80000000u              /* INTERACT2 bit 31: the adapter owns the cartridge port (n64rt_pak.c) */
-#define AN_PORTS(w)   (((w) >> 10) & 15u)      /* INTERACT2 bits 13:10: the menu's "Analogizer controllers", bit n = player n + 1 is the SNAC port's */
+#define AN_PORTS(w)   ((w) & (1u << 14) ? 0u : ((w) >> 10) & 15u)  /* INTERACT2 bits 13:10: the menu's "Analogizer controllers", bit n = player n + 1
+                                                                     * is the SNAC port's (bit 14: the JVS's choices, n64rt_jvs.c: none of them) */
 #define TFIRST_US     64u                      /* the console's wait for a reply's first edge, as the hardware resets it */
 
 static u8  s_probed, s_hw, s_on, s_ports;       /* s_ports: the players that are the SNAC port's now */

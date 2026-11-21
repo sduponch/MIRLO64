@@ -558,7 +558,8 @@ s32 n64rt_osPiRawReadIo(u32 dev, u32 *data) { return io_read(0xB0000000u | dev, 
 static void read_pad(OSContPad *p, int index)
 {
     u32 k, j;
-    switch (index) {
+    if (n64rt_jvs_player(index)) { k = n64rt_jvs_keys(index); j = n64rt_jvs_joy(index); }   /* (a JVS board's player: n64rt_jvs.c) */
+    else switch (index) {
     case 0:  k = apf_input_cont1_key_read(); j = apf_input_cont1_joy_read(); break;
     case 1:  k = apf_input_cont2_key_read(); j = apf_input_cont2_joy_read(); break;
     case 2:  k = apf_input_cont3_key_read(); j = apf_input_cont3_joy_read(); break;
@@ -584,6 +585,7 @@ static void read_pad(OSContPad *p, int index)
  * when the dock reports a pad */
 static int pad_there(int i)
 {
+    if (n64rt_jvs_player(i)) return 1;                     /* (a JVS board's player) */
     if (n64rt_snac_present(i)) return 1;                   /* (a real controller on the SNAC port) */
     if (i == 0) return 1;
     if (n64rt_pak_kind(i) != N64RT_PAK_NONE) return 1;     /* (controller 2's "Transfer Pak (SD)": a pad that is there, nothing pressed if the dock has none) */
@@ -609,6 +611,7 @@ static void si_done(void)
 #ifndef N64RT_SI_GAME                    /* (built with it, the SI's functions are the game's own: below) */
 static void cont_status(OSContStatus *st)
 {
+    n64rt_jvs_step();
     for (int i = 0; i < 4; i++) {
         int on = pad_there(i);
         st[i].type = on ? 0x0005u : 0;               /* CONT_TYPE_NORMAL */
@@ -628,6 +631,7 @@ void n64rt_osContGetQuery(OSContStatus *st) { cont_status(st); }
 s32 n64rt_osContStartReadData(OSMesgQueue *mq) { (void)mq; si_done(); return 0; }
 void n64rt_osContGetReadData(OSContPad *p)
 {
+    n64rt_jvs_step();
     for (int i = 0; i < 4; i++) {
         if (pad_there(i)) read_pad(&p[i], i);
         else { p[i].button = 0; p[i].stick_x = p[i].stick_y = 0; p[i].errnum = 8; }
@@ -765,6 +769,7 @@ static u32 pif_run(void)
     int ch = 0;
     u32 t = PIF_T0;
     n64rt_snac_sync();                               /* (the setting, and who is on the SNAC port) */
+    n64rt_jvs_step();                                /* (a JVS board: its init a step at a time, its last answer) */
     for (int i = 0; i < 63 && ch < 6; ) {
         u8 tx = s_pif[i];
         if (tx == 0xFEu) { t += PIF_TSKIP; break; }
@@ -1266,6 +1271,7 @@ void n64rt_io_init(void)
     n64rt_cheat_init();
     n64rt_pak_init();
     n64rt_snac_sync();                                   /* (after the cartridge slot's owner is known) */
+    n64rt_jvs_step();
     extern void n64rt_audio_init(void), n64rt_gfx_init(void);
     n64rt_audio_init();
     n64rt_gfx_init();
