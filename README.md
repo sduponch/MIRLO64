@@ -15,6 +15,7 @@ It currently supports over 99% of the game library, and it aims to provide cycle
 * Game Shark support.
 * Up to 4 players with the Dock.
 * Up to 4 players with original Nintendo 64 controllers with the Analogizer.
+* A JVS arcade cabinet as players 1 and 2 with the Analogizer's JVS SNAC adapter (see [docs/controllers.md](docs/controllers.md)).
 * All save types are supported.
 * All regions (PAL, NTSC) are supported.
 * Full game size (64 MiB) support.

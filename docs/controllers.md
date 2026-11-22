@@ -106,3 +106,23 @@ The original Nintendo 64 controllers and all the peripherals tested so far work.
 
 * A real controller reports what it has plugged in, and the game talks to it directly, so the accessories in a real controller (Controller Pak, Rumble Pak, Transfer Pak) are the real ones. Their own settings in the core's menu are not used for them.
 * The choice can be changed while a game runs, but a game looks for its controllers when it starts: use **Restart Game** after changing it.
+
+## A JVS arcade cabinet on the Analogizer
+
+With the Analogizer's JVS SNAC adapter, an arcade cabinet's JVS I/O board can be the Nintendo 64 controller of player 1, or of players 1 and 2. Tested with a Sega 838-13683B board (Mario Kart 64 on an Initial D8 cabinet).
+
+* Choose **JVS: P1, Dock: P2P3P4** or **JVS: P1P2, Dock: P3P4** in the **Analogizer controllers** option. The Analogizer must own the cartridge port, as for the SNAC board.
+* The core resets the board twice a second apart, waits 3 s (a Sega 838-13683B does not answer sooner), sets its address, reads its identity and features, then polls it every 14 ms. If the board stops answering, the init starts again.
+* The panel's buttons are the Pocket's keys, so the core's button options apply to them as to the Pocket's own:
+
+  | Cabinet | Pocket key | Nintendo 64 (default) |
+  |---|---|---|
+  | Start | Start | Start |
+  | Up, Down, Left, Right | D-Pad | D-Pad |
+  | Push 1, Push 2 | A, B | A, B |
+  | Push 3, Push 4 | L1, R1 | Z, R |
+  | Push 5, Push 6 | L2, R2 | L, C-Up |
+  | Push 7, Push 8 | Y, X | C-Left, C-Right |
+  | Service | Select | C-Down |
+
+* Analog channels 0 and 1 are player 1's stick (X, Y), 2 and 3 player 2's. A channel counts once it has moved over a quarter of its range (unconnected channels float); its centre is where it was at the init, and its range each side is what it has reached, so a wheel or a pot that does not go end to end still gives the whole stick.
